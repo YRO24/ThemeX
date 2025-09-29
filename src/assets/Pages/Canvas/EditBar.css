@@ -1,0 +1,8 @@
+.Editbar{
+    background-color: white;
+    width: 15rem;
+    height: 35rem;
+    position: absolute;
+    right: 2rem;
+    top: 2rem;
+}

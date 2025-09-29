@@ -1,0 +1,33 @@
+.MenuThing{
+    background-color: white;
+    width: 3rem;
+    height: 3rem;
+    position: absolute;
+    left: 2rem;
+    top: 2rem;
+}
+
+.option1{
+    background-color: white;
+    width: 3rem;
+    height: 3rem;
+    position: absolute;
+    left: 2rem;
+    top: 10rem;
+}
+.option2{
+    background-color: white;
+    width: 3rem;
+    height: 3rem;
+    position: absolute;
+    left: 2rem;
+    top: 16rem;
+}
+.option3{
+    background-color: white;
+    width: 3rem;
+    height: 3rem;
+    position: absolute;
+    left: 2rem;
+    top: 22rem;
+}

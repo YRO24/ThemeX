@@ -1,0 +1,8 @@
+.border{
+    position: absolute;
+    left: 9rem;
+    top: 6rem;
+    width: 50rem;
+    height: 30rem;
+    background-color: black;
+}

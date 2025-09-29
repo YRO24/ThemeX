@@ -1,0 +1,8 @@
+.TopBar{
+    background-color: white;
+    width: 48rem;
+    height: 3rem;
+    position: absolute;
+    top: 2rem;
+    left: 10rem;
+}
