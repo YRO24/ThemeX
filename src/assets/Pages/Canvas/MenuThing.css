@@ -1,33 +1,26 @@
 .MenuThing{
-    background-color: white;
-    width: 3rem;
-    height: 3rem;
+    background-color: black;
+    width: 3.5vw;
+    height: 8vh;
     position: absolute;
-    left: 2rem;
-    top: 2rem;
+    top: 6vh;
 }
-
-.option1{
-    background-color: white;
-    width: 3rem;
-    height: 3rem;
+.option{
+background-color: black;
+    width: 3.5vw;
+    height: 8vh;
     position: absolute;
-    left: 2rem;
-    top: 10rem;
+    left: 2vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.option1{
+    top: 30vh;
 }
 .option2{
-    background-color: white;
-    width: 3rem;
-    height: 3rem;
-    position: absolute;
-    left: 2rem;
-    top: 16rem;
+    top:  45vh;
 }
 .option3{
-    background-color: white;
-    width: 3rem;
-    height: 3rem;
-    position: absolute;
-    left: 2rem;
-    top: 22rem;
+    top: 60vh;
 }

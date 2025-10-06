@@ -5,4 +5,15 @@
     width: 50rem;
     height: 30rem;
     background-color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 2rem;
+}
+.border .screen{
+
+    background-color: #fff;
+    width: 92%;
+    height: 89%;
+
 }
