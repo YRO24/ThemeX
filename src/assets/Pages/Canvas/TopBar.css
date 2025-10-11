@@ -1,9 +1,9 @@
 .TopBar{
     background-color: white;
     width: 60vw;
-    height: 8vh;
+    height: 10vh;
     position: absolute;
-    top: 4vh;
+    top: 2vh;
     left: 12vw;
     display: flex;
     flex-direction: row;
@@ -13,5 +13,7 @@
 .TopBar .choice{
     border-radius: 0.2rem;
     background: black;
+    margin-top: 1vh;
+    margin-bottom: 1vh;
     
 }

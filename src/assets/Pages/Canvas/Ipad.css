@@ -9,11 +9,48 @@
     justify-content: center;
     align-items: center;
     border-radius: 2rem;
+    border:  1px solid;
+    padding: 10px;
+    box-shadow: 5px 10px 10px black;
+    transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.border:hover{
+    box-shadow: 10px 10px 10px white;
 }
 .border .screen{
 
     background-color: #fff;
     width: 92%;
     height: 89%;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    background-image: 
+                /* Vertical Lines (to right) */
+                repeating-linear-gradient(
+                    to right, 
+                    transparent, /* Cell area */
+                    transparent calc(10% - 1px), /* Stop drawing transparent just before 10% */
+                    rgba(0, 0, 0, 0.15) calc(10% - 1px), /* Start drawing the line */
+                    rgba(0, 0, 0, 0.15) 10% /* Line ends at 10% */
+                ),
+                /* Horizontal Lines (to bottom) */
+                repeating-linear-gradient( 
+                    to bottom, 
+                    transparent, 
+                    transparent calc(10% - 1px), 
+                    rgba(0, 0, 0, 0.15) calc(10% - 1px), 
+                    rgba(0, 0, 0, 0.15) 10%
+                );
+            background-size: 100% 100%;
 
+}
+.border .screen .homebutton{
+    justify-self: center;
+    align-self: flex-end;
+    background-color: black;
+    width: 15vw;
+    height: 1vh;
+    margin: 0.2rem;
+    border-radius: 1rem;
 }

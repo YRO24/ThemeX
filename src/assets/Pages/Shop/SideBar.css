@@ -1,0 +1,81 @@
+.SideBar {
+    grid-area: sidebar;
+    background: seagreen;
+    color: white;
+    padding: clamp(1rem, 2vw, 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.5rem, 3vw, 2rem);
+    min-width: 0;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.5rem, 1vw, 0.75rem);
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    font-weight: 700;
+    padding-bottom: clamp(0.75rem, 1.5vw, 1rem);
+    white-space: nowrap;
+}
+
+.logo-icon {
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    flex-shrink: 0;
+}
+
+.nav-section {
+    flex: 1;
+}
+
+.nav-section:last-child {
+    margin-top: auto;
+    padding-top: 2rem;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.25rem, 0.5vw, 0.5rem);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.75rem, 1.5vw, 1rem);
+    padding: clamp(0.5rem, 1vw, 0.75rem) clamp(0.75rem, 1.5vw, 1rem);
+    cursor: pointer;
+    font-size: clamp(0.9rem, 1.5vw, 1rem);
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    min-height: 40px;
+}
+
+.nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+    border-radius: 20px;
+}
+
+.nav-icon {
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    width: clamp(1.2rem, 2vw, 1.5rem);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* Responsive adjustments for smaller desktop screens */
+@media (max-width: 1200px) {
+    .nav-item span:last-child {
+        font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+    }
+}

@@ -8,16 +8,22 @@
 .option{
 background-color: black;
     width: 3.5vw;
-    height: 8vh;
+    height: 7vh;
     position: absolute;
     left: 2vw;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: visible;
+
+
+}
+.option>*{
 }
 .option1{
     top: 30vh;
 }
+
 .option2{
     top:  45vh;
 }
