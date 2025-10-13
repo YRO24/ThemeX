@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&display=swap');
+.loginPage{
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #fcc2d7;
+}
+.centerBox
+{
+    /* background-color: #fff; */
+    width: 50vw;
+    height: 60vh;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-direction: column;
+
+}
+.input {
+    background: #e9ecef;
+    width: 80%;
+    height: 20%;
+    border-radius: 10px;
+}
+.wrapping{
+    width: 80%;
+}
+.wrapping>*{
+    font-size: 2rem;
+    color: black;
+}
+.titleText {
+    font-size: 3rem;
+    color: black;
+    font-family: "Comic Relief", system-ui;
+  font-weight: 400;
+  font-style: normal;
+
+}
+.submitBtn{
+    width: 60%;
+    margin-top: 2rem;
+}
+.submitBtn:hover{
+    background: whitesmoke;
+    color: black;
+}
