@@ -1,0 +1,136 @@
+.icon-library {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.storage-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px;
+  background: #f5f5f7;
+  border-radius: 8px;
+}
+
+.toggle-btn {
+  padding: 8px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.toggle-btn.active {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #007AFF;
+}
+
+.btn-create-new {
+  width: 100%;
+  padding: 14px;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-create-new:hover {
+  background: #0051D5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+}
+
+.icons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 10px;
+}
+
+.icons-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.icons-grid::-webkit-scrollbar-track {
+  background: #f5f5f7;
+}
+
+.icons-grid::-webkit-scrollbar-thumb {
+  background: #c7c7cc;
+  border-radius: 3px;
+}
+
+.icon-card {
+  background: #f5f5f7;
+  border-radius: 10px;
+  padding: 14px;
+  cursor: move;
+  transition: all 0.2s ease;
+  text-align: center;
+  user-select: none;
+}
+
+.icon-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  background: #e8e8ed;
+}
+
+.icon-card:active {
+  cursor: grabbing;
+}
+
+.icon-thumbnail {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 10px;
+  background-size: cover;
+  background-position: center;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+.icon-name {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 50px 20px;
+  color: #999;
+}
+
+.empty-state p {
+  font-size: 15px;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #666;
+}
+
+.empty-state small {
+  font-size: 12px;
+  color: #999;
+}

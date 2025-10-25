@@ -1,25 +1,29 @@
-import React from 'react'
+import React, { useState } from 'react';
+import './MenuThing.css';
 
-import './MenuThing.css'
-function MenuThing() {
+const MenuThing = () => {
+  const [activeItem, setActiveItem] = useState('menu');
+
+  const menuItems = [
+    { id: 'menu', icon: '☰' },
+    { id: 'cloud', icon: '☁' },
+    { id: 'folder', icon: '📁' },
+    { id: 'add', icon: '+' },
+  ];
+
   return (
-    <>
-    <button className="option MenuThing"><span class="material-symbols-outlined">
-menu
-</span></button>
-<button className="option option1">
-<span class="material-symbols-outlined">
-cloud_upload
-</span>
-</button>
-<button className="option option2"><span class="material-symbols-outlined">
-file_save
-</span></button>
-<button className="option option3"><span class="material-symbols-outlined">
-add_2
-</span></button>
-    </>
-  )
-}
+    <div className="menu-thing">
+      {menuItems.map((item) => (
+        <button
+          key={item.id}
+          className={`menu-thing__item ${activeItem === item.id ? 'active' : ''}`}
+          onClick={() => setActiveItem(item.id)}
+        >
+          {item.icon}
+        </button>
+      ))}
+    </div>
+  );
+};
 
-export default MenuThing
+export default MenuThing;

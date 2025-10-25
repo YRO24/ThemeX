@@ -1,18 +1,23 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import "./App.css"
 import MainPage from './assets/Pages/Canvas/MainPage';
 import ShopPage from './assets/Pages/Shop/ShopPage';
 import Login from './assets/Pages/Sign/Login';
 import SignUp from './assets/Pages/Sign/SignUp';
-function App() {
-  return (
-  <>
-    {/* <MainPage /> */}
-    {/* <ShopPage></ShopPage> */}
-    {/* <Login />  */}
-    <SignUp />
-  </>
 
+function App() {
+  return (  
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/canvas" replace />} />
+        <Route path="/canvas" element={<MainPage />} />
+        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="*" element={<Navigate to="/canvas" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

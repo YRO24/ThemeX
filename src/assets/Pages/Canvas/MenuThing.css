@@ -30,3 +30,40 @@ background-color: black;
 .option3{
     top: 60vh;
 }
+
+.menu-thing {
+  width: 80px;
+  height: 100%;
+  background: #2c2c2e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.menu-thing__item {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  color: white;
+  font-size: 20px;
+}
+
+.menu-thing__item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.menu-thing__item.active {
+  background: #007AFF;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+}
