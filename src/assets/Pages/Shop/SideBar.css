@@ -54,10 +54,17 @@
     transition: all 0.2s ease;
     white-space: nowrap;
     min-height: 40px;
+    user-select: none;
 }
 
 .nav-item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(4px);
+}
+
+.nav-item:active {
+    transform: translateX(2px);
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 .nav-item.active {

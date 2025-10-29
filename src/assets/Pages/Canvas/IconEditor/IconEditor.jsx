@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './IconEditor.css';
 
-const IconEditor = ({ icon, mode, onSave, onCancel }) => {
+const IconEditor = ({ icon, mode, onSave, onCancel, iconType }) => {
   const [iconData, setIconData] = useState({
     name: '',
+    type: 'app-icon',
     image: null,
     shape: 'rounded-square',
     backgroundColor: '#ffffff',
@@ -17,16 +18,62 @@ const IconEditor = ({ icon, mode, onSave, onCancel }) => {
     },
     size: 80,
     borderRadius: 20,
-    shadow: false
+    shadow: false,
+    photos: [],
+    devices: [],
+    selectedDeviceType: null
   });
 
+  const [photoInputs, setPhotoInputs] = useState([]);
   const fileInputRef = useRef(null);
+  const photoFileInputRef = useRef(null);
 
   useEffect(() => {
     if (icon) {
-      setIconData(icon);
+      setIconData({
+        ...icon,
+        photos: icon.photos || [],
+        devices: icon.devices || [],
+        selectedDeviceType: icon.selectedDeviceType || null
+      });
+    } else if (iconType) {
+      // Set defaults based on icon type
+      const defaults = {
+        name: '',
+        type: iconType.id,
+        image: null,
+        shape: 'rounded-square',
+        backgroundColor: '#ffffff',
+        transparency: 100,
+        filters: {
+          brightness: 100,
+          contrast: 100,
+          saturation: 100,
+          blur: 0,
+          hue: 0
+        },
+        size: 80,
+        borderRadius: 20,
+        shadow: false,
+        photos: [],
+        devices: [],
+        selectedDeviceType: null
+      };
+
+      if (iconType.id === 'photo-widget') {
+        defaults.size = 160;
+        defaults.borderRadius = 15;
+        defaults.shadow = true;
+      } else if (iconType.id === 'device-widget') {
+        defaults.size = 140;
+        defaults.borderRadius = 20;
+        defaults.backgroundColor = '#1c1c1e';
+        defaults.shadow = true;
+      }
+
+      setIconData(defaults);
     }
-  }, [icon]);
+  }, [icon, iconType]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -39,6 +86,74 @@ const IconEditor = ({ icon, mode, onSave, onCancel }) => {
     }
   };
 
+  const handlePhotoUpload = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setIconData(prev => ({
+          ...prev,
+          photos: [...(prev.photos || []), event.target.result]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removePhoto = (index) => {
+    setIconData(prev => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
+    }));
+  };
+
+  const deviceTypes = [
+    { 
+      id: 'airpods',
+      name: 'AirPods Pro',
+      icon: '🎧',
+      battery: 85
+    },
+    { 
+      id: 'iphone',
+      name: 'iPhone',
+      icon: '📱',
+      battery: 92
+    },
+    { 
+      id: 'watch',
+      name: 'Apple Watch',
+      icon: '⌚',
+      battery: 78
+    },
+    { 
+      id: 'macbook',
+      name: 'MacBook',
+      icon: '💻',
+      battery: 65
+    },
+    { 
+      id: 'ipad',
+      name: 'iPad',
+      icon: '📲',
+      battery: 88
+    },
+    { 
+      id: 'homepod',
+      name: 'HomePod',
+      icon: '🔊',
+      battery: 100
+    }
+  ];
+
+  const handleSelectDevice = (device) => {
+    setIconData(prev => ({
+      ...prev,
+      selectedDeviceType: device,
+      devices: [device]
+    }));
+  };
+
   const updateFilter = (filterName, value) => {
     setIconData({
       ...iconData,
@@ -47,8 +162,9 @@ const IconEditor = ({ icon, mode, onSave, onCancel }) => {
   };
 
   const resetIcon = () => {
-    setIconData({
+    const defaultData = {
       name: '',
+      type: iconType?.id || 'app-icon',
       image: null,
       shape: 'rounded-square',
       backgroundColor: '#ffffff',
@@ -56,8 +172,25 @@ const IconEditor = ({ icon, mode, onSave, onCancel }) => {
       filters: { brightness: 100, contrast: 100, saturation: 100, blur: 0, hue: 0 },
       size: 80,
       borderRadius: 20,
-      shadow: false
-    });
+      shadow: false,
+      photos: [],
+      devices: [],
+      selectedDeviceType: null
+    };
+    
+    // Apply type-specific defaults
+    if (iconType?.id === 'photo-widget') {
+      defaultData.size = 160;
+      defaultData.borderRadius = 15;
+      defaultData.shadow = true;
+    } else if (iconType?.id === 'device-widget') {
+      defaultData.size = 140;
+      defaultData.borderRadius = 20;
+      defaultData.backgroundColor = '#1c1c1e';
+      defaultData.shadow = true;
+    }
+    
+    setIconData(defaultData);
   };
 
   const applyTheme = (theme) => {
@@ -80,6 +213,19 @@ const IconEditor = ({ icon, mode, onSave, onCancel }) => {
 
   return (
     <div className="icon-editor">
+      {/* Icon Type Info */}
+      {iconType && iconType.id !== 'app-icon' && (
+        <div className="editor-section">
+          <div className="icon-type-info">
+            <span className="type-icon">{iconType.icon}</span>
+            <div>
+              <h4>{iconType.name}</h4>
+              <p>{iconType.description}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Name Input */}
       <div className="editor-section">
         <h3>Icon Name</h3>
@@ -118,20 +264,81 @@ const IconEditor = ({ icon, mode, onSave, onCancel }) => {
         />
       </div>
 
-      {/* Image Upload */}
-      <div className="editor-section">
-        <h3>Image</h3>
-        <button className="btn-upload" onClick={() => fileInputRef.current.click()}>
-          {iconData.image ? 'Change Image' : 'Add Image'}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          style={{ display: 'none' }}
-        />
-      </div>
+      {/* Image Upload - Only for App Icons */}
+      {iconType?.id === 'app-icon' && (
+        <div className="editor-section">
+          <h3>Image</h3>
+          <button className="btn-upload" onClick={() => fileInputRef.current.click()}>
+            {iconData.image ? 'Change Image' : 'Add Image'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={{ display: 'none' }}
+          />
+        </div>
+      )}
+
+      {/* Photo Upload - Only for Photo Widgets */}
+      {iconType?.id === 'photo-widget' && (
+        <div className="editor-section">
+          <h3>Photos ({(iconData.photos || []).length})</h3>
+          <button className="btn-upload" onClick={() => photoFileInputRef.current.click()}>
+            + Add Photos
+          </button>
+          <input
+            ref={photoFileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handlePhotoUpload}
+            style={{ display: 'none' }}
+          />
+          {iconData.photos && iconData.photos.length > 0 && (
+            <div className="photos-grid">
+              {iconData.photos.map((photo, index) => (
+                <div key={index} className="photo-item">
+                  <img src={photo} alt={`Photo ${index + 1}`} />
+                  <button className="btn-remove-photo" onClick={() => removePhoto(index)}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Device Selection - Only for Device Widgets */}
+      {iconType?.id === 'device-widget' && (
+        <div className="editor-section">
+          <h3>Select Device</h3>
+          <div className="device-types-grid">
+            {deviceTypes.map((device) => (
+              <div 
+                key={device.id}
+                className={`device-type-card ${iconData.selectedDeviceType?.id === device.id ? 'selected' : ''}`}
+                onClick={() => handleSelectDevice(device)}
+              >
+                <div className="device-icon">{device.icon}</div>
+                <div className="device-info">
+                  <span className="device-name">{device.name}</span>
+                  <div className="battery-indicator">
+                    <div className="battery-outline">
+                      <div 
+                        className="battery-fill"
+                        style={{ width: `${device.battery}%` }}
+                      />
+                      <div className="battery-tip" />
+                    </div>
+                    <span className="battery-percentage">{device.battery}%</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Shape Selection */}
       <div className="editor-section">

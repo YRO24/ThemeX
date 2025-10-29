@@ -52,12 +52,14 @@
 }
 
 .icons-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
   flex: 1;
   overflow-y: auto;
   padding-bottom: 10px;
+  justify-content: flex-start;
+  align-content: flex-start;
 }
 
 .icons-grid::-webkit-scrollbar {
@@ -74,19 +76,22 @@
 }
 
 .icon-card {
-  background: #f5f5f7;
+  background: transparent;
   border-radius: 10px;
-  padding: 14px;
+  padding: 0;
   cursor: move;
   transition: all 0.2s ease;
   text-align: center;
   user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
 }
 
-.icon-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  background: #e8e8ed;
+.icon-card:hover .icon-thumbnail {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .icon-card:active {
@@ -94,26 +99,30 @@
 }
 
 .icon-thumbnail {
-  width: 70px;
-  height: 70px;
-  margin: 0 auto 10px;
+  width: 60px;
+  height: 60px;
+  margin: 0;
   background-size: cover;
   background-position: center;
   background-color: white;
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   pointer-events: none;
+  transition: all 0.2s ease;
 }
 
 .icon-name {
   display: block;
-  font-size: 12px;
+  font-size: 10px;
   color: #666;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   pointer-events: none;
+  max-width: 60px;
+  margin-top: 4px;
+  padding: 0 2px;
 }
 
 .empty-state {

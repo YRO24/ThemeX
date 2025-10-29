@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import './Ipad.css';
 
-const Ipad = ({ placedIcons, onIconDrop, onIconUpdate }) => {
+const Ipad = ({ placedIcons, onIconDrop, onIconUpdate, onIconDelete, showIconNames, currentBackground, isPoweredOn }) => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [draggingIconId, setDraggingIconId] = useState(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [contextMenu, setContextMenu] = useState(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
+    // If repositioning, use 'move', otherwise 'copy'
+    e.dataTransfer.dropEffect = draggingIconId ? 'move' : 'copy';
     setIsDraggingOver(true);
   };
 
@@ -21,48 +21,29 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate }) => {
     e.preventDefault();
     setIsDraggingOver(false);
     
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // If we're repositioning an existing icon
     if (draggingIconId) {
+      onIconUpdate(draggingIconId, { position: { x, y } });
+      setDraggingIconId(null);
       return;
     }
 
+    // Otherwise, we're adding a new icon from the library
     const iconData = e.dataTransfer.getData('icon');
     if (iconData) {
       const icon = JSON.parse(iconData);
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
       onIconDrop(icon, { x, y });
     }
   };
 
   const handleIconDragStart = (e, icon) => {
+    e.stopPropagation();
     setDraggingIconId(icon.id);
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left - rect.width / 2;
-    const offsetY = e.clientY - rect.top - rect.height / 2;
-    setDragOffset({ x: offsetX, y: offsetY });
-
-    const dragImage = document.createElement('div');
-    dragImage.style.opacity = '0';
-    document.body.appendChild(dragImage);
-    e.dataTransfer.setDragImage(dragImage, 0, 0);
-    setTimeout(() => document.body.removeChild(dragImage), 0);
-  };
-
-  const handleIconDragEnd = (e) => {
-    if (draggingIconId) {
-      const screenElement = document.querySelector('.ipad-screen');
-      const rect = screenElement.getBoundingClientRect();
-      const x = e.clientX - rect.left - dragOffset.x;
-      const y = e.clientY - rect.top - dragOffset.y;
-      
-      onIconUpdate(draggingIconId, { position: { x, y } });
-      
-      setDraggingIconId(null);
-      setDragOffset({ x: 0, y: 0 });
-    }
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleContextMenu = (e, icon) => {
@@ -75,9 +56,8 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate }) => {
   };
 
   const handleDeleteIcon = () => {
-    if (contextMenu) {
-      const updatedIcons = placedIcons.filter(icon => icon.id !== contextMenu.icon.id);
-      // This would need to be passed from parent
+    if (contextMenu && onIconDelete) {
+      onIconDelete(contextMenu.icon.id);
       setContextMenu(null);
     }
   };
@@ -91,21 +71,62 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate }) => {
     }
   }, [contextMenu]);
 
+  // Get current time
+  const [currentTime, setCurrentTime] = React.useState(new Date());
+  
+  React.useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
+
+  const formatDate = () => {
+    const options = { weekday: 'long', month: 'long', day: 'numeric' };
+    return currentTime.toLocaleDateString('en-US', options);
+  };
+
   return (
     <div className="ipad-container">
       <div 
-        className={`ipad-screen ${isDraggingOver ? 'drag-over' : ''}`}
+        className={`ipad-screen ${isDraggingOver ? 'drag-over' : ''} ${!isPoweredOn ? 'powered-off' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        style={{
+          backgroundImage: currentBackground ? `url(${currentBackground.image})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
       >
-        {placedIcons.map((icon) => (
+        {isPoweredOn ? (
+          <>
+            {/* Status Bar */}
+            <div className="ipad-status-bar">
+              <div className="status-left">{formatTime(currentTime)}</div>
+              <div className="status-right">
+                <span>📶</span>
+                <span>📡</span>
+                <span>🔋 100%</span>
+              </div>
+            </div>
+
+            {/* Lock Screen Widget */}
+            <div className="lock-widget">
+              <div className="time-large">{formatTime(currentTime)}</div>
+              <div className="date-text">{formatDate()}</div>
+            </div>
+
+            {/* Placed Icons */}
+            {placedIcons.map((icon) => (
           <div
             key={icon.id}
-            className={`placed-icon ${draggingIconId === icon.id ? 'dragging' : ''}`}
+            data-icon-id={icon.id}
+            className={`placed-icon ${draggingIconId === icon.id ? 'dragging' : ''} ${icon.type || 'app-icon'}`}
             draggable
             onDragStart={(e) => handleIconDragStart(e, icon)}
-            onDragEnd={handleIconDragEnd}
             onContextMenu={(e) => handleContextMenu(e, icon)}
             style={{
               position: 'absolute',
@@ -134,25 +155,82 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate }) => {
               zIndex: draggingIconId === icon.id ? 1000 : 1
             }}
           >
-            <div className="icon-label">{icon.name}</div>
+            {/* Icon Type Specific Content */}
+            {icon.type === 'photo-widget' && (
+              <div className="photo-widget-content">
+                {icon.photos && icon.photos.length > 0 ? (
+                  <div className="photo-display" style={{ backgroundImage: `url(${icon.photos[0]})` }} />
+                ) : icon.image ? (
+                  <div className="photo-display" style={{ backgroundImage: `url(${icon.image})` }} />
+                ) : (
+                  <div className="photo-placeholder">
+                    <span>🖼️</span>
+                    <span>Photos</span>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {icon.type === 'device-widget' && (
+              <div className="device-widget-content">
+                {icon.selectedDeviceType ? (
+                  <>
+                    <div className="device-header">
+                      <span className="device-icon-display">{icon.selectedDeviceType.icon}</span>
+                      <span className="device-title">{icon.selectedDeviceType.name}</span>
+                    </div>
+                    <div className="device-battery-display">
+                      <div className="battery-bar">
+                        <div 
+                          className="battery-bar-fill"
+                          style={{ width: `${icon.selectedDeviceType.battery}%` }}
+                        />
+                        <div className="battery-bar-tip" />
+                      </div>
+                      <span className="battery-text">{icon.selectedDeviceType.battery}%</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="device-header">
+                      <span className="device-icon-display">🔗</span>
+                      <span className="device-title">Devices</span>
+                    </div>
+                    <div className="device-list">
+                      <div className="device-item">No devices</div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            
+            <div className="icon-label" style={{ opacity: showIconNames ? 1 : 0 }}>
+              {icon.name}
+            </div>
           </div>
         ))}
 
-        {contextMenu && (
-          <div 
-            className="context-menu"
-            style={{
-              position: 'fixed',
-              left: `${contextMenu.x}px`,
-              top: `${contextMenu.y}px`
-            }}
-          >
-            <button onClick={handleDeleteIcon}>Delete</button>
-            <button onClick={() => setContextMenu(null)}>Cancel</button>
+            {contextMenu && (
+              <div 
+                className="context-menu"
+                style={{
+                  position: 'fixed',
+                  left: `${contextMenu.x}px`,
+                  top: `${contextMenu.y}px`
+                }}
+              >
+                <button onClick={handleDeleteIcon}>Delete</button>
+                <button onClick={() => setContextMenu(null)}>Cancel</button>
+              </div>
+            )}
+
+            <div className="ipad-home-indicator"></div>
+          </>
+        ) : (
+          <div className="power-off-screen">
+            <div className="power-off-message">Device is powered off</div>
           </div>
         )}
-
-        <div className="ipad-home-indicator"></div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 .TopBar2{
     grid-area: header;
-    background: #e0e7ff;
+    background: linear-gradient(135deg, #e0e7ff 0%, #f3e7ff 100%);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -11,6 +11,8 @@
     z-index: 100;
     width: auto;
     min-height: 80px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
 }
 
 .search-section {
@@ -18,35 +20,48 @@
     align-items: center;
     gap: 1rem;
     flex: 1;
-    max-width: clamp(250px, 30vw, 350px);
+    max-width: clamp(250px, 30vw, 400px);
     min-width: 200px;
 }
 
 .search-container {
     position: relative;
     flex: 1;
+    display: flex;
+    align-items: center;
 }
 
 .search-input {
     width: 100%;
-    background-color: #c7d2fe;
-    border: none;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid transparent;
     border-radius: 25px;
-    padding: clamp(0.5rem, 1vw, 0.75rem) clamp(0.75rem, 1.5vw, 1rem);
+    padding: clamp(0.6rem, 1vw, 0.8rem) clamp(1rem, 1.5vw, 1.2rem) clamp(0.6rem, 1vw, 0.8rem) clamp(3rem, 4vw, 3.5rem);
     outline: none;
-    font-size: clamp(0.8rem, 1.2vw, 0.9rem);
-    transition: all 0.2s;
+    font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .search-input:focus {
-    background-color: #a5b4fc;
+    background-color: white;
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.search-input::placeholder {
+    color: #9ca3af;
 }
 
 .search-icon {
-    color: #374151;
-    font-size: clamp(1rem, 1.5vw, 1.1rem);
-    cursor: pointer;
-    flex-shrink: 0;
+    position: absolute;
+    left: clamp(0.75rem, 1vw, 1rem);
+    color: #667eea;
+    font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 
 .center-section {
@@ -159,7 +174,7 @@
 }
 
 .btn {
-    background: seagreen;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     border-radius: 25px;
@@ -168,13 +183,18 @@
     font-size: clamp(0.8rem, 1.2vw, 0.9rem);
     cursor: pointer;
     transition: all 0.2s;
-    min-width: clamp(60px, 10vw, 80px);
+    min-width: clamp(80px, 10vw, 100px);
     white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .btn:hover {
-    background: green;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn:active {
+    transform: translateY(0);
 }
 
 /* Responsive adjustments for desktop scaling */

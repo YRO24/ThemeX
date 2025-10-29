@@ -1,48 +1,60 @@
-import React from 'react'
+import React, { useState } from 'react'
 import './TopBar.css'
 
-function TopBar() {
+function TopBar({ onSearch }) {
+  const [searchValue, setSearchValue] = useState('');
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    if (onSearch) {
+      onSearch(value);
+    }
+  };
+
   return (
     <div className="TopBar2">
       <div className="search-section">
         <div className="search-container">
+          <span className="search-icon">
+            <span className="material-symbols-outlined">search</span>
+          </span>
           <input 
             type="text" 
             className="search-input" 
-            placeholder=""
+            placeholder="Search themes and icon packs..."
+            value={searchValue}
+            onChange={handleSearchChange}
           />
         </div>
-        <span className="search-icon"><span class="material-symbols-outlined">
-search
-</span></span>
       </div>
       
       <div className="center-section">
         <div className="user-profile">
-          <div className="user-avatar-large"><span class="material-symbols-outlined" style={{color:"black"}}>
-add_reaction
-</span></div>
+          <div className="user-avatar-large">
+            <span className="material-symbols-outlined" style={{color:"black"}}>palette</span>
+          </div>
           <div className="user-greeting">
-            <h3>Hi there,</h3>
-            <h2>Norah Jones</h2>
+            <h3>Welcome to</h3>
+            <h2>ThemeX Shop</h2>
           </div>
         </div>
       </div>
       
       <div className="right-section">
         <div className="top-row">
-          <div className="notifications"><span class="material-symbols-outlined">
-notifications
-</span></div>
-          <div className="user-avatar-small"><span class="material-symbols-outlined" style={{color:"black"}}>
-add_reaction
-</span></div>
-          <span className="user-name">Norah Jones</span>
+          <div className="notifications">
+            <span className="material-symbols-outlined">notifications</span>
+          </div>
+          <div className="user-avatar-small">
+            <span className="material-symbols-outlined" style={{color:"black"}}>account_circle</span>
+          </div>
+          <span className="user-name">Guest</span>
         </div>
         <div className="action-buttons">
-          <button className="btn">New</button>
-          <button className="btn">Upload</button>
-          <button className="btn">Share</button>
+          <button className="btn">🎨 My Themes</button>
+          <button className="btn">💎 Premium</button>
+          <button className="btn">⚙️ Settings</button>
         </div>
       </div>
     </div>
