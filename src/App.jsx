@@ -5,12 +5,14 @@ import MainPage from './assets/Pages/Canvas/MainPage';
 import ShopPage from './assets/Pages/Shop/ShopPage';
 import Login from './assets/Pages/Sign/Login';
 import SignUp from './assets/Pages/Sign/SignUp';
+import LandingPage from './assets/Pages/LandingPage/LandingPage';
 
 function App() {
   return (  
     <Router>
       <Routes>
         <Route path="/" element={<Navigate to="/canvas" replace />} />
+        <Route path="/landing" element={<LandingPage />} />
         <Route path="/canvas" element={<MainPage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/login" element={<Login />} />
