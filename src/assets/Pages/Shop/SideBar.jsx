@@ -16,65 +16,38 @@ function SideBar() {
     <div className="SideBar">
       <div className="sidebar-header">
         <div className="logo-icon"></div>
-        <span>Dashboard</span>
+        <span>Shop</span>
       </div>
       
       <nav className="nav-section">
         <ul className="nav-list">
-          <li className="nav-item active" onClick={() => handleNavClick('/shop')}>
-<span className="material-symbols-outlined">
-home
-</span>
+          <li className="nav-item" onClick={() => handleNavClick('/main')}>
+            <span className="material-symbols-outlined">home</span>
             <span>Home</span>
           </li>
+
           <li className="nav-item" onClick={() => handleNavClick('/canvas')}>
-          <span className="material-symbols-outlined">
-brush
-</span>
+            <span className="material-symbols-outlined">brush</span>
             <span>Canvas</span>
           </li>
-          
-          <li className="nav-item">
-<span className="material-symbols-outlined">
-history
-</span>
-<span>History</span>
+
+          <li className="nav-item" onClick={() => handleNavClick('/history')}>
+            <span className="material-symbols-outlined">history</span>
+            <span>History</span>
           </li>
-          <li className="nav-item">
-<span className="material-symbols-outlined">
-lists
-</span>
-            <span>Tasks</span>
+
+          <li className="nav-item" onClick={() => handleNavClick('/cart')}>
+            <span className="material-symbols-outlined">shopping_cart</span>
+            <span>Cart</span>
           </li>
-          <li className="nav-item">
-<span className="material-symbols-outlined">
-group
-</span>
-            <span>Communities</span>
+
+          <li className="nav-item" onClick={() => handleNavClick('/save')}>
+            <span className="material-symbols-outlined">bookmark</span>
+            <span>Saves</span>
           </li>
         </ul>
       </nav>
       
-      <nav className="nav-section">
-        <ul className="nav-list">
-          <li className="nav-item">
-<span className="material-symbols-outlined">
-settings
-</span>
-            <span>Settings</span>
-          </li>
-          <li className="nav-item">
-<span className="material-symbols-outlined">
-elderly
-</span>
-            <span>Support</span>
-<span className="material-symbols-outlined">
-elderly_woman
-</span>
-          </li>
-
-        </ul>
-      </nav>
     </div>
   )
 }

@@ -1,0 +1,39 @@
+.shop-page {
+  margin-left: 240px; /* to make space for sidebar */
+  padding: 40px;
+  color: #fff;
+  background-color: #0a0f1a;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+}
+
+.shop-page h2 {
+  font-size: 28px;
+  color: #6ac1ff;
+  margin-bottom: 10px;
+}
+
+.shop-page p {
+  color: #aaa;
+  margin-bottom: 30px;
+}
+
+.recent-items {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.item-card {
+  background: #121826;
+  border-radius: 10px;
+  padding: 20px;
+  width: 220px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: 0.3s;
+}
+
+.item-card:hover {
+  background: #1b2436;
+  transform: translateY(-3px);
+}
