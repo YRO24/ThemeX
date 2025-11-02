@@ -1,7 +1,56 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Login.css";
 
 function Login() {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError(""); // Clear error when user types
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Store token and user info in localStorage
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        
+        // Redirect to main page
+        window.location.href = "/main";
+      } else {
+        setError(data.message || "Login failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Unable to connect to server. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="login-page">
       <div className="login-container">
@@ -10,7 +59,7 @@ function Login() {
             <div className="logo">Themex</div>
             <div className="nav-links">
               <a href="/landing">Home</a>
-              <a href="/SignUp">Signup</a>
+              <a href="/signup">Signup</a>
             </div>
           </div>
 
@@ -20,23 +69,50 @@ function Login() {
               Login<span className="dot">.</span>
             </h1>
             <p className="member-text">
-              Don’t have an account? <a href="/SignUp">Sign up</a>
+              Don't have an account? <a href="/signup">Sign up</a>
             </p>
 
-            <form>
-              <input type="email" placeholder="Email address" required />
-              <input type="password" placeholder="Password" required />
+            {error && (
+              <div className="error-message" style={{
+                backgroundColor: '#fee',
+                color: '#c33',
+                padding: '10px',
+                borderRadius: '5px',
+                marginBottom: '15px',
+                border: '1px solid #fcc'
+              }}>
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
 
               <div className="extra-options">
                 <a href="#">Forgot Password?</a>
               </div>
 
               <button
-                type="button"
+                type="submit"
                 className="login-btn"
-                onClick={() => (window.location.href = "/main")}
+                disabled={loading}
               >
-                Login
+                {loading ? "Logging in..." : "Login"}
               </button>
             </form>
           </div>

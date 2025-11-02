@@ -1,130 +1,197 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Main.css";
+
+const API_URL = "http://localhost:5000/api";
 
 function Main() {
   const navigate = useNavigate();
   
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      name: "Portfolio Website",
-      lastEdited: "Oct 28, 2025",
-      preview: "🎨",
-      gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      lastOpened: new Date("2025-10-28"),
-      deleted: false,
-    },
-    {
-      id: 2,
-      name: "Dark Dashboard",
-      lastEdited: "Oct 25, 2025",
-      preview: "🌙",
-      gradient: "linear-gradient(135deg, #2c3e50 0%, #4b79a1 100%)",
-      lastOpened: new Date("2025-10-25"),
-      deleted: false,
-    },
-    {
-      id: 3,
-      name: "Travel App UI",
-      lastEdited: "Oct 20, 2025",
-      preview: "✈️",
-      gradient: "linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)",
-      lastOpened: new Date("2025-10-20"),
-      deleted: false,
-    },
-    {
-      id: 4,
-      name: "E-commerce Site",
-      lastEdited: "Oct 15, 2025",
-      preview: "🛒",
-      gradient: "linear-gradient(135deg, #ff6b6b 0%, #feca57 100%)",
-      lastOpened: new Date("2025-10-15"),
-      deleted: false,
-    },
-    {
-      id: 5,
-      name: "Music Player",
-      lastEdited: "Oct 10, 2025",
-      preview: "🎵",
-      gradient: "linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)",
-      lastOpened: new Date("2025-10-10"),
-      deleted: false,
-    },
-  ]);
-
+  const [projects, setProjects] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [showMenu, setShowMenu] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [renaming, setRenaming] = useState(null);
   const [newName, setNewName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleOpenProject = (project) => {
-    if (renaming === project.id) return;
+  // Get token from localStorage
+  const getToken = () => localStorage.getItem('token');
+
+  // Fetch user profile
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/profile`, {
+        headers: {
+          'Authorization': `Bearer ${getToken()}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setUserProfile(data.user);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  // Fetch projects
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const endpoint = activeFilter === "trash" ? "/projects/trash" : 
+                      activeFilter === "recent" ? "/projects/recent" : "/projects";
+      
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        headers: {
+          'Authorization': `Bearer ${getToken()}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setProjects(data.projects);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+    fetchUserProfile();
+    fetchProjects();
+  }, [activeFilter]);
+
+  const handleOpenProject = async (project) => {
+    if (renaming === project.projectId) return;
     
-    const updatedProjects = projects.map(p => 
-      p.id === project.id 
-        ? { ...p, lastOpened: new Date(), lastEdited: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }
-        : p
-    );
-    setProjects(updatedProjects);
-    navigate('/canvas', { state: { project } });
+    try {
+      await fetch(`${API_URL}/projects/${project.projectId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ lastOpened: new Date() })
+      });
+      
+      navigate('/canvas', { state: { project } });
+    } catch (error) {
+      console.error('Error updating project:', error);
+    }
   };
 
-  const handleNewDesign = () => {
-    const newProject = {
-      id: Date.now(),
-      name: `Untitled Project ${projects.filter(p => !p.deleted).length + 1}`,
-      lastEdited: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      preview: "🆕",
-      gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-      lastOpened: new Date(),
-      deleted: false,
-    };
-    setProjects([newProject, ...projects]);
-    setActiveFilter("all");
-    navigate('/canvas', { state: { project: newProject } });
+  const handleNewDesign = async () => {
+    try {
+      const response = await fetch(`${API_URL}/projects`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({
+          name: `Untitled Project ${projects.filter(p => !p.deleted).length + 1}`
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        navigate('/canvas', { state: { project: data.project } });
+      }
+    } catch (error) {
+      console.error('Error creating project:', error);
+    }
   };
 
-  const handleDelete = (projectId, e) => {
+  const handleDelete = async (projectId, e) => {
     e.stopPropagation();
-    const updatedProjects = projects.map(p => 
-      p.id === projectId ? { ...p, deleted: true } : p
-    );
-    setProjects(updatedProjects);
+    try {
+      const response = await fetch(`${API_URL}/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${getToken()}`
+        }
+      });
+      
+      if (response.ok) {
+        fetchProjects();
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+    }
     setShowMenu(null);
   };
 
-  const handleRestore = (projectId, e) => {
+  const handleRestore = async (projectId, e) => {
     e.stopPropagation();
-    const updatedProjects = projects.map(p => 
-      p.id === projectId ? { ...p, deleted: false } : p
-    );
-    setProjects(updatedProjects);
+    try {
+      const response = await fetch(`${API_URL}/projects/${projectId}/restore`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${getToken()}`
+        }
+      });
+      
+      if (response.ok) {
+        fetchProjects();
+      }
+    } catch (error) {
+      console.error('Error restoring project:', error);
+    }
   };
 
-  const handlePermanentDelete = (projectId, e) => {
+  const handlePermanentDelete = async (projectId, e) => {
     e.stopPropagation();
     if (window.confirm("Permanently delete this project? This cannot be undone.")) {
-      setProjects(projects.filter(p => p.id !== projectId));
+      try {
+        const response = await fetch(`${API_URL}/projects/${projectId}/permanent`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${getToken()}`
+          }
+        });
+        
+        if (response.ok) {
+          fetchProjects();
+        }
+      } catch (error) {
+        console.error('Error permanently deleting project:', error);
+      }
     }
   };
 
   const handleRename = (projectId, e) => {
     e.stopPropagation();
-    const project = projects.find(p => p.id === projectId);
+    const project = projects.find(p => p.projectId === projectId);
     setRenaming(projectId);
     setNewName(project.name);
     setShowMenu(null);
   };
 
-  const saveRename = (projectId) => {
+  const saveRename = async (projectId) => {
     if (newName.trim()) {
-      const updatedProjects = projects.map(p => 
-        p.id === projectId ? { ...p, name: newName.trim() } : p
-      );
-      setProjects(updatedProjects);
+      try {
+        await fetch(`${API_URL}/projects/${projectId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+          },
+          body: JSON.stringify({ name: newName.trim() })
+        });
+        
+        fetchProjects();
+      } catch (error) {
+        console.error('Error renaming project:', error);
+      }
     }
     setRenaming(null);
     setNewName("");
@@ -135,22 +202,14 @@ function Main() {
     setNewName("");
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
   const getFilteredProjects = () => {
-    let filtered = [];
-    
-    if (activeFilter === "trash") {
-      filtered = projects.filter(p => p.deleted);
-    } else {
-      const activeProjects = projects.filter(p => !p.deleted);
-      
-      if (activeFilter === "recent") {
-        filtered = activeProjects
-          .sort((a, b) => b.lastOpened - a.lastOpened)
-          .slice(0, 10);
-      } else {
-        filtered = activeProjects;
-      }
-    }
+    let filtered = projects;
     
     // Apply search filter
     if (searchQuery.trim()) {
@@ -164,54 +223,44 @@ function Main() {
 
   const filteredProjects = getFilteredProjects();
 
-  const userProfile = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    role: "UI/UX Designer",
-    memberSince: "January 2024",
-    totalProjects: projects.filter(p => !p.deleted).length,
-    deletedProjects: projects.filter(p => p.deleted).length,
-  };
-
   return (
     <div className="main-container">
       {/* Sidebar */}
       <aside className="sidebar">
-  <h1 className="logo">ThemeX</h1>
-  <button className="sidebar-btn primary" onClick={handleNewDesign}>
-    🎨 Start a New Design
-  </button>
-  <button 
-    className={`sidebar-btn ${activeFilter === "recent" ? "active" : ""}`}
-    onClick={() => setActiveFilter("recent")}
-  >
-    🕐 Recents
-  </button>
-  <button 
-    className={`sidebar-btn ${activeFilter === "all" ? "active" : ""}`}
-    onClick={() => setActiveFilter("all")}
-  >
-    📂 All Projects
-  </button>
-  <button 
-    className="sidebar-btn"
-    onClick={() => navigate("/shop")}
-  >
-    🛍️ Shop
-  </button>
-  <button 
-    className={`sidebar-btn ${activeFilter === "trash" ? "active" : ""}`}
-    onClick={() => setActiveFilter("trash")}
-  >
-    🗑️ Delete
-  </button>
-  <div className="sidebar-footer">
-    <button className="profile-btn" onClick={() => setShowProfile(!showProfile)}>
-      👤 Profile
-    </button>
-  </div>
-</aside>
-
+        <h1 className="logo">ThemeX</h1>
+        <button className="sidebar-btn primary" onClick={handleNewDesign}>
+          🎨 Start a New Design
+        </button>
+        <button 
+          className={`sidebar-btn ${activeFilter === "recent" ? "active" : ""}`}
+          onClick={() => setActiveFilter("recent")}
+        >
+          🕐 Recents
+        </button>
+        <button 
+          className={`sidebar-btn ${activeFilter === "all" ? "active" : ""}`}
+          onClick={() => setActiveFilter("all")}
+        >
+          📂 All Projects
+        </button>
+        <button 
+          className="sidebar-btn"
+          onClick={() => navigate("/shop")}
+        >
+          🛍️ Shop
+        </button>
+        <button 
+          className={`sidebar-btn ${activeFilter === "trash" ? "active" : ""}`}
+          onClick={() => setActiveFilter("trash")}
+        >
+          🗑️ Delete
+        </button>
+        <div className="sidebar-footer">
+          <button className="profile-btn" onClick={() => setShowProfile(!showProfile)}>
+            👤 Profile
+          </button>
+        </div>
+      </aside>
 
       {/* Main content */}
       <main className="content">
@@ -229,7 +278,11 @@ function Main() {
           />
         </div>
 
-        {filteredProjects.length === 0 ? (
+        {loading ? (
+          <div className="empty-state">
+            <p>Loading projects...</p>
+          </div>
+        ) : filteredProjects.length === 0 ? (
           <div className="empty-state">
             <p>
               {searchQuery.trim() 
@@ -243,7 +296,7 @@ function Main() {
           <div className="grid">
             {filteredProjects.map((proj) => (
               <div
-                key={proj.id}
+                key={proj.projectId}
                 className="card"
                 style={{ background: proj.gradient }}
                 onClick={() => !proj.deleted && handleOpenProject(proj)}
@@ -251,49 +304,49 @@ function Main() {
                 {!proj.deleted && (
                   <div className="menu-trigger" onClick={(e) => {
                     e.stopPropagation();
-                    setShowMenu(showMenu === proj.id ? null : proj.id);
+                    setShowMenu(showMenu === proj.projectId ? null : proj.projectId);
                   }}>
                     ⋮
                   </div>
                 )}
                 
-                {showMenu === proj.id && (
+                {showMenu === proj.projectId && (
                   <div className="dropdown-menu" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={(e) => handleRename(proj.id, e)}>✏️ Rename</button>
-                    <button onClick={(e) => handleDelete(proj.id, e)}>🗑️ Delete</button>
+                    <button onClick={(e) => handleRename(proj.projectId, e)}>✏️ Rename</button>
+                    <button onClick={(e) => handleDelete(proj.projectId, e)}>🗑️ Delete</button>
                   </div>
                 )}
 
                 <div className="overlay">
                   <div className="icon">{proj.preview}</div>
-                  {renaming === proj.id ? (
+                  {renaming === proj.projectId ? (
                     <div className="rename-input" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="text"
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") saveRename(proj.id);
+                          if (e.key === "Enter") saveRename(proj.projectId);
                           if (e.key === "Escape") cancelRename();
                         }}
                         autoFocus
                       />
                       <div className="rename-buttons">
-                        <button onClick={() => saveRename(proj.id)}>✓</button>
+                        <button onClick={() => saveRename(proj.projectId)}>✓</button>
                         <button onClick={cancelRename}>✗</button>
                       </div>
                     </div>
                   ) : (
                     <>
                       <h3>{proj.name}</h3>
-                      <p>Last edited: {proj.lastEdited}</p>
+                      <p>Last edited: {new Date(proj.lastEdited).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                     </>
                   )}
                   
                   {proj.deleted && (
                     <div className="trash-actions" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={(e) => handleRestore(proj.id, e)}>↺ Restore</button>
-                      <button onClick={(e) => handlePermanentDelete(proj.id, e)}>✗ Delete Forever</button>
+                      <button onClick={(e) => handleRestore(proj.projectId, e)}>↺ Restore</button>
+                      <button onClick={(e) => handlePermanentDelete(proj.projectId, e)}>✗ Delete Forever</button>
                     </div>
                   )}
                 </div>
@@ -304,7 +357,7 @@ function Main() {
       </main>
 
       {/* Profile Modal */}
-      {showProfile && (
+      {showProfile && userProfile && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -314,13 +367,13 @@ function Main() {
             <div className="profile-details">
               <div className="profile-avatar">
                 <div className="avatar-circle">
-                  {userProfile.name.split(' ').map(n => n[0]).join('')}
+                  {userProfile.firstName[0]}{userProfile.lastName[0]}
                 </div>
               </div>
               <div className="profile-info">
                 <div className="info-row">
                   <span className="label">Name:</span>
-                  <span className="value">{userProfile.name}</span>
+                  <span className="value">{userProfile.firstName} {userProfile.lastName}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Email:</span>
@@ -332,7 +385,7 @@ function Main() {
                 </div>
                 <div className="info-row">
                   <span className="label">Member Since:</span>
-                  <span className="value">{userProfile.memberSince}</span>
+                  <span className="value">{new Date(userProfile.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Active Projects:</span>
@@ -343,7 +396,7 @@ function Main() {
                   <span className="value">{userProfile.deletedProjects}</span>
                 </div>
               </div>
-              <button className="edit-profile-btn">Edit Profile</button>
+              <button className="edit-profile-btn" onClick={handleLogout}>Logout</button>
             </div>
           </div>
         </div>

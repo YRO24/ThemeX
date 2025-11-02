@@ -1,74 +1,62 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-require('dotenv').config();
 
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:5173',
-  credentials: true
-}));
-app.use(bodyParser.json({ limit: '50mb' })); // Increased limit for image data
-app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/themex';
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB Connected Successfully'))
+  .catch(err => console.error('MongoDB Connection Error:', err));
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log('✅ Connected to MongoDB');
-})
-.catch((error) => {
-  console.error('❌ MongoDB connection error:', error);
-  console.log('💡 Make sure MongoDB is running locally or check your connection string');
-});
+// Import Routes
+const authRouter = require('./routes/auth');
+const projectsRouter = require('./routes/projects');
+const cartRouter = require('./routes/cart');
+const wishlistRouter = require('./routes/wishlist');
+const historyRouter = require('./routes/history');
 
-// Routes
-const workspaceRoutes = require('./routes/workspace');
-const collectionRoutes = require('./routes/collections');
-const iconRoutes = require('./routes/icons');
+// Use Routes
+app.use('/api/auth', authRouter);
+app.use('/api/projects', projectsRouter);
+app.use('/api/cart', cartRouter);
+app.use('/api/wishlist', wishlistRouter);
+app.use('/api/history', historyRouter);
 
-app.use('/api/workspace', workspaceRoutes);
-app.use('/api/collections', collectionRoutes);
-app.use('/api/icons', iconRoutes);
-
-// Health check endpoint
+// Health check route
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'ThemeX Backend is running',
-    mongodb: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    message: 'Server is running',
     timestamp: new Date().toISOString()
   });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Server Error:', err);
   res.status(500).json({ 
-    error: 'Something went wrong!',
-    message: err.message 
+    success: false, 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ 
+    success: false, 
+    message: 'Route not found' 
+  });
 });
 
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 CORS enabled for: ${process.env.ALLOWED_ORIGINS || 'http://localhost:5173'}`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
-
-module.exports = app;
