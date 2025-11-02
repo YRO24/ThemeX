@@ -3,8 +3,8 @@ import './EditBar.css';
 import IconEditor from './IconEditor/IconEditor';
 import IconLibrary from './IconLibrary/IconLibrary';
 
-const EditBar = ({ icons, onIconCreate, mode, favouriteIcons, onToggleFavourite, backgrounds, onBackgroundUpload, onBackgroundSelect, activeView }) => {
-  const [activeTab, setActiveTab] = useState('library');
+const EditBar = ({ icons, onIconCreate, mode, favouriteIcons, onToggleFavourite, backgrounds, onBackgroundUpload, onBackgroundSelect, activeView, screenMode }) => {
+  const [activeTab, setActiveTab] = useState('library'); // ✅ ADDED MISSING STATE
   const [editorMode, setEditorMode] = useState(null);
   const [currentIcon, setCurrentIcon] = useState(null);
   const [selectedIconPreset, setSelectedIconPreset] = useState(null);
@@ -40,17 +40,6 @@ const EditBar = ({ icons, onIconCreate, mode, favouriteIcons, onToggleFavourite,
     { id: 'outline', name: 'Outline', preview: { borderRadius: 20, backgroundColor: 'transparent', shadow: false } },
   ];
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setUploadedImages([...uploadedImages, { url: event.target.result, name: file.name }]);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleBackgroundUploadLocal = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -71,7 +60,7 @@ const EditBar = ({ icons, onIconCreate, mode, favouriteIcons, onToggleFavourite,
     };
     onIconCreate(iconToSave);
     
-    setActiveTab('elements');
+    setActiveTab('library'); // ✅ FIXED: Changed from 'elements' to 'library'
     setEditorMode(null);
     setCurrentIcon(null);
     setSelectedIconType(null);
@@ -131,6 +120,9 @@ const EditBar = ({ icons, onIconCreate, mode, favouriteIcons, onToggleFavourite,
       <div className="edit-bar">
         <div className="edit-bar__header">
           <h2>Backgrounds</h2>
+          <div className="screen-mode-indicator">
+            {screenMode === 'lockscreen' ? '🔒 Lock Screen' : '🏠 Home Screen'}
+          </div>
         </div>
 
         <div className="edit-bar__content">
@@ -336,10 +328,10 @@ const EditBar = ({ icons, onIconCreate, mode, favouriteIcons, onToggleFavourite,
                 </div>
                 <button 
                   className="btn-back" 
-                  onClick={() => setActiveTab('templates')}
+                  onClick={() => setActiveTab('presets')}
                   style={{ marginTop: '20px' }}
                 >
-                  ← Back to Collections
+                  ← Back to Presets
                 </button>
               </div>
             ) : (
@@ -363,7 +355,7 @@ const EditBar = ({ icons, onIconCreate, mode, favouriteIcons, onToggleFavourite,
                   mode={editorMode}
                   onSave={handleSaveIcon}
                   onCancel={() => {
-                    setActiveTab('elements');
+                    setActiveTab('library');
                     setEditorMode(null);
                     setSelectedIconType(null);
                   }}

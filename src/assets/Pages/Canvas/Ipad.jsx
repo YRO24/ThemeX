@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
 import './Ipad.css';
 
-const Ipad = ({ placedIcons, onIconDrop, onIconUpdate, onIconDelete, showIconNames, currentBackground, isPoweredOn }) => {
+const Ipad = ({ 
+  placedIcons, 
+  onIconDrop, 
+  onIconUpdate, 
+  onIconDelete, 
+  showIconNames, 
+  currentBackground, 
+  isPoweredOn, 
+  screenMode 
+}) => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [draggingIconId, setDraggingIconId] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();
-    // If repositioning, use 'move', otherwise 'copy'
     e.dataTransfer.dropEffect = draggingIconId ? 'move' : 'copy';
     setIsDraggingOver(true);
   };
@@ -25,14 +33,12 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate, onIconDelete, showIconNam
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    // If we're repositioning an existing icon
     if (draggingIconId) {
       onIconUpdate(draggingIconId, { position: { x, y } });
       setDraggingIconId(null);
       return;
     }
 
-    // Otherwise, we're adding a new icon from the library
     const iconData = e.dataTransfer.getData('icon');
     if (iconData) {
       const icon = JSON.parse(iconData);
@@ -62,7 +68,6 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate, onIconDelete, showIconNam
     }
   };
 
-  // Close context menu on click outside
   React.useEffect(() => {
     const handleClick = () => setContextMenu(null);
     if (contextMenu) {
@@ -71,7 +76,6 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate, onIconDelete, showIconNam
     }
   }, [contextMenu]);
 
-  // Get current time
   const [currentTime, setCurrentTime] = React.useState(new Date());
   
   React.useEffect(() => {
@@ -91,7 +95,7 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate, onIconDelete, showIconNam
   return (
     <div className="ipad-container">
       <div 
-        className={`ipad-screen ${isDraggingOver ? 'drag-over' : ''} ${!isPoweredOn ? 'powered-off' : ''}`}
+        className={`ipad-screen ${isDraggingOver ? 'drag-over' : ''} ${!isPoweredOn ? 'powered-off' : ''} ${screenMode === 'homescreen' ? 'homescreen-mode' : 'lockscreen-mode'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -113,102 +117,104 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate, onIconDelete, showIconNam
               </div>
             </div>
 
-            {/* Lock Screen Widget */}
-            <div className="lock-widget">
-              <div className="time-large">{formatTime(currentTime)}</div>
-              <div className="date-text">{formatDate()}</div>
-            </div>
+            {/* Lock Screen Widget - Only show on lockscreen mode */}
+            {screenMode === 'lockscreen' && (
+              <div className="lock-widget">
+                <div className="time-large">{formatTime(currentTime)}</div>
+                <div className="date-text">{formatDate()}</div>
+              </div>
+            )}
 
             {/* Placed Icons */}
             {placedIcons.map((icon) => (
-          <div
-            key={icon.id}
-            data-icon-id={icon.id}
-            className={`placed-icon ${draggingIconId === icon.id ? 'dragging' : ''} ${icon.type || 'app-icon'}`}
-            draggable
-            onDragStart={(e) => handleIconDragStart(e, icon)}
-            onContextMenu={(e) => handleContextMenu(e, icon)}
-            style={{
-              position: 'absolute',
-              left: `${icon.position.x}px`,
-              top: `${icon.position.y}px`,
-              width: `${icon.size}px`,
-              height: `${icon.size}px`,
-              borderRadius: `${icon.borderRadius}%`,
-              backgroundColor: icon.backgroundColor,
-              opacity: draggingIconId === icon.id ? 0.5 : icon.transparency / 100,
-              boxShadow: icon.shadow ? '0 8px 16px rgba(0,0,0,0.15)' : 'none',
-              backgroundImage: icon.image ? `url(${icon.image})` : 'none',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: `
-                brightness(${icon.filters.brightness}%)
-                contrast(${icon.filters.contrast}%)
-                saturate(${icon.filters.saturation}%)
-                blur(${icon.filters.blur}px)
-                hue-rotate(${icon.filters.hue}deg)
-              `,
-              transform: 'translate(-50%, -50%)',
-              cursor: 'move',
-              transition: draggingIconId === icon.id ? 'none' : 'all 0.2s ease',
-              pointerEvents: 'auto',
-              zIndex: draggingIconId === icon.id ? 1000 : 1
-            }}
-          >
-            {/* Icon Type Specific Content */}
-            {icon.type === 'photo-widget' && (
-              <div className="photo-widget-content">
-                {icon.photos && icon.photos.length > 0 ? (
-                  <div className="photo-display" style={{ backgroundImage: `url(${icon.photos[0]})` }} />
-                ) : icon.image ? (
-                  <div className="photo-display" style={{ backgroundImage: `url(${icon.image})` }} />
-                ) : (
-                  <div className="photo-placeholder">
-                    <span>🖼️</span>
-                    <span>Photos</span>
+              <div
+                key={icon.id}
+                data-icon-id={icon.id}
+                className={`placed-icon ${draggingIconId === icon.id ? 'dragging' : ''} ${icon.type || 'app-icon'}`}
+                draggable
+                onDragStart={(e) => handleIconDragStart(e, icon)}
+                onContextMenu={(e) => handleContextMenu(e, icon)}
+                style={{
+                  position: 'absolute',
+                  left: `${icon.position.x}px`,
+                  top: `${icon.position.y}px`,
+                  width: `${icon.size}px`,
+                  height: `${icon.size}px`,
+                  borderRadius: `${icon.borderRadius}%`,
+                  backgroundColor: icon.backgroundColor,
+                  opacity: draggingIconId === icon.id ? 0.5 : icon.transparency / 100,
+                  boxShadow: icon.shadow ? '0 8px 16px rgba(0,0,0,0.15)' : 'none',
+                  backgroundImage: icon.image ? `url(${icon.image})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  filter: `
+                    brightness(${icon.filters.brightness}%)
+                    contrast(${icon.filters.contrast}%)
+                    saturate(${icon.filters.saturation}%)
+                    blur(${icon.filters.blur}px)
+                    hue-rotate(${icon.filters.hue}deg)
+                  `,
+                  transform: 'translate(-50%, -50%)',
+                  cursor: 'move',
+                  transition: draggingIconId === icon.id ? 'none' : 'all 0.2s ease',
+                  pointerEvents: 'auto',
+                  zIndex: draggingIconId === icon.id ? 1000 : 1
+                }}
+              >
+                {/* Icon Type Specific Content */}
+                {icon.type === 'photo-widget' && (
+                  <div className="photo-widget-content">
+                    {icon.photos && icon.photos.length > 0 ? (
+                      <div className="photo-display" style={{ backgroundImage: `url(${icon.photos[0]})` }} />
+                    ) : icon.image ? (
+                      <div className="photo-display" style={{ backgroundImage: `url(${icon.image})` }} />
+                    ) : (
+                      <div className="photo-placeholder">
+                        <span>🖼️</span>
+                        <span>Photos</span>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-            )}
-            
-            {icon.type === 'device-widget' && (
-              <div className="device-widget-content">
-                {icon.selectedDeviceType ? (
-                  <>
-                    <div className="device-header">
-                      <span className="device-icon-display">{icon.selectedDeviceType.icon}</span>
-                      <span className="device-title">{icon.selectedDeviceType.name}</span>
-                    </div>
-                    <div className="device-battery-display">
-                      <div className="battery-bar">
-                        <div 
-                          className="battery-bar-fill"
-                          style={{ width: `${icon.selectedDeviceType.battery}%` }}
-                        />
-                        <div className="battery-bar-tip" />
-                      </div>
-                      <span className="battery-text">{icon.selectedDeviceType.battery}%</span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="device-header">
-                      <span className="device-icon-display">🔗</span>
-                      <span className="device-title">Devices</span>
-                    </div>
-                    <div className="device-list">
-                      <div className="device-item">No devices</div>
-                    </div>
-                  </>
+                
+                {icon.type === 'device-widget' && (
+                  <div className="device-widget-content">
+                    {icon.selectedDeviceType ? (
+                      <>
+                        <div className="device-header">
+                          <span className="device-icon-display">{icon.selectedDeviceType.icon}</span>
+                          <span className="device-title">{icon.selectedDeviceType.name}</span>
+                        </div>
+                        <div className="device-battery-display">
+                          <div className="battery-bar">
+                            <div 
+                              className="battery-bar-fill"
+                              style={{ width: `${icon.selectedDeviceType.battery}%` }}
+                            />
+                            <div className="battery-bar-tip" />
+                          </div>
+                          <span className="battery-text">{icon.selectedDeviceType.battery}%</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="device-header">
+                          <span className="device-icon-display">🔗</span>
+                          <span className="device-title">Devices</span>
+                        </div>
+                        <div className="device-list">
+                          <div className="device-item">No devices</div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 )}
+                
+                <div className="icon-label" style={{ opacity: showIconNames ? 1 : 0 }}>
+                  {icon.name}
+                </div>
               </div>
-            )}
-            
-            <div className="icon-label" style={{ opacity: showIconNames ? 1 : 0 }}>
-              {icon.name}
-            </div>
-          </div>
-        ))}
+            ))}
 
             {contextMenu && (
               <div 
@@ -225,6 +231,11 @@ const Ipad = ({ placedIcons, onIconDrop, onIconUpdate, onIconDelete, showIconNam
             )}
 
             <div className="ipad-home-indicator"></div>
+
+            {/* Screen Mode Indicator */}
+            <div className="screen-mode-badge">
+              {screenMode === 'lockscreen' ? '🔒 Lock Screen' : '🏠 Home Screen'}
+            </div>
           </>
         ) : (
           <div className="power-off-screen">

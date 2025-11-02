@@ -26,11 +26,6 @@ function SideBar() {
             <span>Home</span>
           </li>
 
-          <li className="nav-item" onClick={() => handleNavClick('/canvas')}>
-            <span className="material-symbols-outlined">brush</span>
-            <span>Canvas</span>
-          </li>
-
           <li className="nav-item" onClick={() => handleNavClick('/history')}>
             <span className="material-symbols-outlined">history</span>
             <span>History</span>

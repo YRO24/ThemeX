@@ -973,3 +973,22 @@
   background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
   box-shadow: 0 -6px 16px rgba(102, 126, 234, 0.3);
 }
+.edit-bar__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.screen-mode-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+}

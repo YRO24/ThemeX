@@ -6,7 +6,7 @@ const API_URL = "http://localhost:5000/api";
 
 function Main() {
   const navigate = useNavigate();
-  
+
   const [projects, setProjects] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [showMenu, setShowMenu] = useState(null);
@@ -17,44 +17,37 @@ function Main() {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Get token from localStorage
-  const getToken = () => localStorage.getItem('token');
+  const getToken = () => localStorage.getItem("token");
 
-  // Fetch user profile
   const fetchUserProfile = async () => {
     try {
       const response = await fetch(`${API_URL}/auth/profile`, {
-        headers: {
-          'Authorization': `Bearer ${getToken()}`
-        }
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       const data = await response.json();
-      if (data.success) {
-        setUserProfile(data.user);
-      }
+      if (data.success) setUserProfile(data.user);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
     }
   };
 
-  // Fetch projects
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const endpoint = activeFilter === "trash" ? "/projects/trash" : 
-                      activeFilter === "recent" ? "/projects/recent" : "/projects";
-      
+      const endpoint =
+        activeFilter === "trash"
+          ? "/projects/trash"
+          : activeFilter === "recent"
+          ? "/projects/recent"
+          : "/projects";
+
       const response = await fetch(`${API_URL}${endpoint}`, {
-        headers: {
-          'Authorization': `Bearer ${getToken()}`
-        }
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       const data = await response.json();
-      if (data.success) {
-        setProjects(data.projects);
-      }
+      if (data.success) setProjects(data.projects);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      console.error("Error fetching projects:", error);
     } finally {
       setLoading(false);
     }
@@ -63,69 +56,75 @@ function Main() {
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
     fetchUserProfile();
     fetchProjects();
   }, [activeFilter]);
 
-  const handleOpenProject = async (project) => {
-    if (renaming === project.projectId) return;
-    
-    try {
-      await fetch(`${API_URL}/projects/${project.projectId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({ lastOpened: new Date() })
-      });
-      
-      navigate('/canvas', { state: { project } });
-    } catch (error) {
-      console.error('Error updating project:', error);
-    }
-  };
+ 
 
   const handleNewDesign = async () => {
     try {
       const response = await fetch(`${API_URL}/projects`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
         },
         body: JSON.stringify({
-          name: `Untitled Project ${projects.filter(p => !p.deleted).length + 1}`
-        })
+          name: `Untitled Project ${projects.filter((p) => !p.deleted).length + 1}`,
+        }),
       });
-      
+
       const data = await response.json();
       if (data.success) {
-        navigate('/canvas', { state: { project: data.project } });
+        // ✅ Navigate with ?new=true query parameter
+        navigate(`/canvas?new=true&id=${data.project.projectId}`);
       }
     } catch (error) {
-      console.error('Error creating project:', error);
+      console.error("Error creating project:", error);
     }
   };
 
+  const handleOpenProject = async (project) => {
+    if (renaming === project.projectId) return;
+    try {
+      await fetch(`${API_URL}/projects/${project.projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ lastOpened: new Date() }),
+      });
+      // ✅ Navigate with project ID in URL (no ?new=true for existing projects)
+      navigate(`/canvas?id=${project.projectId}`);
+    } catch (error) {
+      console.error("Error updating project:", error);
+    }
+  };
+  // ✅ FIXED: move project immediately to deleted tab after delete
   const handleDelete = async (projectId, e) => {
     e.stopPropagation();
     try {
       const response = await fetch(`${API_URL}/projects/${projectId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${getToken()}`
-        }
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
-      
-      if (response.ok) {
-        fetchProjects();
+
+      const data = await response.json();
+      if (data.success) {
+        // Instantly mark as deleted locally
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.projectId === projectId ? { ...p, deleted: true } : p
+          )
+        );
       }
     } catch (error) {
-      console.error('Error deleting project:', error);
+      console.error("Error deleting project:", error);
     }
     setShowMenu(null);
   };
@@ -134,17 +133,20 @@ function Main() {
     e.stopPropagation();
     try {
       const response = await fetch(`${API_URL}/projects/${projectId}/restore`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${getToken()}`
-        }
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
-      
-      if (response.ok) {
-        fetchProjects();
+      const data = await response.json();
+      if (data.success) {
+        // Instantly unmark deleted locally
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.projectId === projectId ? { ...p, deleted: false } : p
+          )
+        );
       }
     } catch (error) {
-      console.error('Error restoring project:', error);
+      console.error("Error restoring project:", error);
     }
   };
 
@@ -153,24 +155,22 @@ function Main() {
     if (window.confirm("Permanently delete this project? This cannot be undone.")) {
       try {
         const response = await fetch(`${API_URL}/projects/${projectId}/permanent`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${getToken()}`
-          }
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${getToken()}` },
         });
-        
-        if (response.ok) {
-          fetchProjects();
+        const data = await response.json();
+        if (data.success) {
+          setProjects((prev) => prev.filter((p) => p.projectId !== projectId));
         }
       } catch (error) {
-        console.error('Error permanently deleting project:', error);
+        console.error("Error permanently deleting project:", error);
       }
     }
   };
 
   const handleRename = (projectId, e) => {
     e.stopPropagation();
-    const project = projects.find(p => p.projectId === projectId);
+    const project = projects.find((p) => p.projectId === projectId);
     setRenaming(projectId);
     setNewName(project.name);
     setShowMenu(null);
@@ -180,17 +180,16 @@ function Main() {
     if (newName.trim()) {
       try {
         await fetch(`${API_URL}/projects/${projectId}`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
           },
-          body: JSON.stringify({ name: newName.trim() })
+          body: JSON.stringify({ name: newName.trim() }),
         });
-        
         fetchProjects();
       } catch (error) {
-        console.error('Error renaming project:', error);
+        console.error("Error renaming project:", error);
       }
     }
     setRenaming(null);
@@ -203,21 +202,21 @@ function Main() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   const getFilteredProjects = () => {
     let filtered = projects;
-    
-    // Apply search filter
+    if (activeFilter === "trash") filtered = filtered.filter((p) => p.deleted);
+    else filtered = filtered.filter((p) => !p.deleted);
+
     if (searchQuery.trim()) {
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter((p) =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
     return filtered;
   };
 
@@ -231,25 +230,22 @@ function Main() {
         <button className="sidebar-btn primary" onClick={handleNewDesign}>
           🎨 Start a New Design
         </button>
-        <button 
+        <button
           className={`sidebar-btn ${activeFilter === "recent" ? "active" : ""}`}
           onClick={() => setActiveFilter("recent")}
         >
           🕐 Recents
         </button>
-        <button 
+        <button
           className={`sidebar-btn ${activeFilter === "all" ? "active" : ""}`}
           onClick={() => setActiveFilter("all")}
         >
           📂 All Projects
         </button>
-        <button 
-          className="sidebar-btn"
-          onClick={() => navigate("/shop")}
-        >
+        <button className="sidebar-btn" onClick={() => navigate("/shop")}>
           🛍️ Shop
         </button>
-        <button 
+        <button
           className={`sidebar-btn ${activeFilter === "trash" ? "active" : ""}`}
           onClick={() => setActiveFilter("trash")}
         >
@@ -266,8 +262,11 @@ function Main() {
       <main className="content">
         <div className="topbar">
           <h2>
-            {activeFilter === "recent" ? "Recent Projects (Last 10)" : 
-             activeFilter === "trash" ? "Deleted Projects" : "My Projects"}
+            {activeFilter === "recent"
+              ? "Recent Projects (Last 10)"
+              : activeFilter === "trash"
+              ? "Deleted Projects"
+              : "My Projects"}
           </h2>
           <input
             type="text"
@@ -285,11 +284,11 @@ function Main() {
         ) : filteredProjects.length === 0 ? (
           <div className="empty-state">
             <p>
-              {searchQuery.trim() 
-                ? `🔍 No projects found matching "${searchQuery}"` 
-                : activeFilter === "trash" 
-                  ? "🗑️ No deleted projects" 
-                  : "📂 No projects found"}
+              {searchQuery.trim()
+                ? `🔍 No projects found matching "${searchQuery}"`
+                : activeFilter === "trash"
+                ? "🗑️ No deleted projects"
+                : "📂 No projects found"}
             </p>
           </div>
         ) : (
@@ -302,14 +301,17 @@ function Main() {
                 onClick={() => !proj.deleted && handleOpenProject(proj)}
               >
                 {!proj.deleted && (
-                  <div className="menu-trigger" onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMenu(showMenu === proj.projectId ? null : proj.projectId);
-                  }}>
+                  <div
+                    className="menu-trigger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(showMenu === proj.projectId ? null : proj.projectId);
+                    }}
+                  >
                     ⋮
                   </div>
                 )}
-                
+
                 {showMenu === proj.projectId && (
                   <div className="dropdown-menu" onClick={(e) => e.stopPropagation()}>
                     <button onClick={(e) => handleRename(proj.projectId, e)}>✏️ Rename</button>
@@ -339,14 +341,23 @@ function Main() {
                   ) : (
                     <>
                       <h3>{proj.name}</h3>
-                      <p>Last edited: {new Date(proj.lastEdited).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      <p>
+                        Last edited:{" "}
+                        {new Date(proj.lastEdited).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
                     </>
                   )}
-                  
+
                   {proj.deleted && (
                     <div className="trash-actions" onClick={(e) => e.stopPropagation()}>
                       <button onClick={(e) => handleRestore(proj.projectId, e)}>↺ Restore</button>
-                      <button onClick={(e) => handlePermanentDelete(proj.projectId, e)}>✗ Delete Forever</button>
+                      <button onClick={(e) => handlePermanentDelete(proj.projectId, e)}>
+                        ✗ Delete Forever
+                      </button>
                     </div>
                   )}
                 </div>
@@ -362,18 +373,23 @@ function Main() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>👤 Profile</h2>
-              <button className="close-btn" onClick={() => setShowProfile(false)}>✕</button>
+              <button className="close-btn" onClick={() => setShowProfile(false)}>
+                ✕
+              </button>
             </div>
             <div className="profile-details">
               <div className="profile-avatar">
                 <div className="avatar-circle">
-                  {userProfile.firstName[0]}{userProfile.lastName[0]}
+                  {userProfile.firstName[0]}
+                  {userProfile.lastName[0]}
                 </div>
               </div>
               <div className="profile-info">
                 <div className="info-row">
                   <span className="label">Name:</span>
-                  <span className="value">{userProfile.firstName} {userProfile.lastName}</span>
+                  <span className="value">
+                    {userProfile.firstName} {userProfile.lastName}
+                  </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Email:</span>
@@ -385,7 +401,12 @@ function Main() {
                 </div>
                 <div className="info-row">
                   <span className="label">Member Since:</span>
-                  <span className="value">{new Date(userProfile.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                  <span className="value">
+                    {new Date(userProfile.memberSince).toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
                 </div>
                 <div className="info-row">
                   <span className="label">Active Projects:</span>
@@ -396,7 +417,9 @@ function Main() {
                   <span className="value">{userProfile.deletedProjects}</span>
                 </div>
               </div>
-              <button className="edit-profile-btn" onClick={handleLogout}>Logout</button>
+              <button className="edit-profile-btn" onClick={handleLogout}>
+                Logout
+              </button>
             </div>
           </div>
         </div>

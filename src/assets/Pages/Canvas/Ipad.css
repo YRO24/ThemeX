@@ -384,3 +384,60 @@
     opacity: 0.6;
   }
 }
+/* Add these styles to your existing Ipad.css */
+
+/* Screen Mode Badge */
+.screen-mode-badge {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 100;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+/* Lock Screen Mode Styling */
+.ipad-screen.lockscreen-mode .lock-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Home Screen Mode - Hide lock widget */
+.ipad-screen.homescreen-mode .lock-widget {
+  display: none;
+}
+
+/* Optional: Different background overlay for each mode */
+.ipad-screen.lockscreen-mode::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ipad-screen.homescreen-mode::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+  z-index: 0;
+}
