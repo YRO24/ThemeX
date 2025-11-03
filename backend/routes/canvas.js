@@ -115,7 +115,7 @@ router.get('/:projectId', async (req, res) => {
 // ✅ Delete canvas for a project
 router.delete('/:projectId', async (req, res) => {
   try {
-    const { projectId } = req.params;
+    const { projectId } = req.paranms;
     console.log(`🗑️ Deleting canvas for project: ${projectId}`);
     
     const result = await Canvas.findOneAndDelete({ projectId });

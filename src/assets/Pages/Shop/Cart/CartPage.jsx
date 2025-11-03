@@ -3,53 +3,69 @@ import './CartPage.css';
 import { useNavigate } from "react-router-dom";
 
 function CartPage() {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 2,
-      name: 'Gradient Dreams',
-      description: 'Vibrant gradient icon collection with smooth color transitions.',
-      price: 4.99,
-      category: 'gradient',
-      preview: ['🎨', '🖼️', '🌈', '✨'],
-      author: 'ColorFlow',
-      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-    },
-    {
-      id: 3,
-      name: 'Glass Morphism Pro',
-      description: 'Professional glassmorphism design with blur effects and transparency.',
-      price: 6.99,
-      category: 'glass',
-      preview: ['💎', '🔷', '💠', '🔹'],
-      author: 'Glass UI',
-      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
-    },
-    {
-      id: 6,
-      name: 'Neon Nights',
-      description: 'Bold neon-style icons with glowing effects.',
-      price: 5.99,
-      category: 'gradient',
-      preview: ['⚡', '💫', '🔥', '💥'],
-      author: 'Neon Labs',
-      gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-    }
-  ]);
-
+  const [cartItems, setCartItems] = useState([]);
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
-   const navigate = useNavigate();
+  const navigate = useNavigate();
+
   useEffect(() => {
     document.body.style.overflow = 'auto';
     document.documentElement.style.overflow = 'auto';
   }, []);
+
+  // ✅ FIX: Get userId from user object
+  const currentUser = JSON.parse(localStorage.getItem('user'));
+  const userId = currentUser?._id || currentUser?.id || 'guest';
+
+  // ✅ Fetch cart items
+  useEffect(() => {
+    const fetchCart = async () => {
+      if (!userId || userId === 'guest') {
+        console.log('No user logged in');
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/cart?userId=${userId}`);
+        const data = await res.json();
+        if (data.success) {
+          setCartItems(data.cart);
+          console.log('Cart loaded:', data.cart.length, 'items');
+        } else {
+          console.error(data.message);
+        }
+      } catch (err) {
+        console.error('Error fetching cart:', err);
+      }
+    };
+    fetchCart();
+  }, [userId]);
+
+  // ✅ Back button
   const handleBackClick = () => {
     navigate("/shop");
   };
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+
+  // ✅ Remove item
+  const removeItem = async (themeId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/cart/${themeId}?userId=${userId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCartItems(data.cart);
+        // Notify sidebar to update
+        window.dispatchEvent(new Event('cartUpdated'));
+      } else {
+        console.error(data.message);
+      }
+    } catch (err) {
+      console.error('Error removing item:', err);
+    }
   };
 
+  // ✅ Apply promo
   const applyPromoCode = () => {
     if (promoCode.toUpperCase() === 'SAVE10') {
       setAppliedPromo({ code: 'SAVE10', discount: 0.10 });
@@ -60,17 +76,17 @@ function CartPage() {
     }
   };
 
+  // ✅ Calculate totals
   const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
   const discount = appliedPromo ? subtotal * appliedPromo.discount : 0;
   const total = subtotal - discount;
 
   return (
     <div className="cart-page">
-      {/* Header */}
       <div className="cart-header">
-<button className="back-button" onClick={handleBackClick}>
-              ← Back to Shop
-            </button>
+        <button className="back-button" onClick={handleBackClick}>
+          ← Back to Shop
+        </button>
         <h1>🛒 Your Cart</h1>
       </div>
 
@@ -82,11 +98,13 @@ function CartPage() {
               <div className="cart-icon">🛒</div>
               <h2>Your cart is empty</h2>
               <p>Add some amazing themes to get started!</p>
-              <button className="browse-btn">Browse Themes</button>
+              <button className="browse-btn" onClick={handleBackClick}>
+                Browse Themes
+              </button>
             </div>
           ) : (
-            cartItems.map(item => (
-              <div key={item.id} className="cart-item">
+            cartItems.map((item) => (
+              <div key={item._id} className="cart-item">
                 <div
                   className="item-preview"
                   style={{ background: item.gradient }}
@@ -106,7 +124,7 @@ function CartPage() {
                     </div>
                     <button
                       className="remove-btn"
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.themeId)}
                     >
                       ×
                     </button>
@@ -123,7 +141,7 @@ function CartPage() {
           )}
         </div>
 
-        {/* Order Summary */}
+        {/* Summary */}
         {cartItems.length > 0 && (
           <div className="summary-section">
             <div className="order-summary">

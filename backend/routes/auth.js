@@ -231,4 +231,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
 
 // Export router as default and authenticateToken as named export
 module.exports = router;
-module.exports.authenticateToken = authenticateToken;
+module.exports = {
+  router,
+  authenticateToken
+};

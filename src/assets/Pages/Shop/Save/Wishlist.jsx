@@ -1,294 +1,184 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./Wishlist.css";
 
-function WishlistPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+function Wishlist() {
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // enable scrolling on mount
+  // Get userId
+  const currentUser = JSON.parse(localStorage.getItem('user'));
+  const userId = currentUser?._id || currentUser?.id;
+
+  // ✅ Fetch wishlist
   useEffect(() => {
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.overflow = 'auto';
-  }, []);
+    const fetchWishlist = async () => {
+      if (!userId) return;
+      
+      try {
+        const response = await axios.get(`http://localhost:5000/api/wishlist?userId=${userId}`);
+        setWishlistItems(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error("Error fetching wishlist:", error);
+      }
+    };
+    fetchWishlist();
+  }, [userId]);
 
-  const wishlistItems = [
-    {
-      id: 'WISH-001',
-      name: 'Ocean Breeze Theme',
-      author: 'Blue Horizon',
-      addedOn: '2024-10-15',
-      gradient: 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)',
-      tags: ['Calm', 'Minimal', 'Aesthetic'],
-      price: 5.99,
-      isFavorite: true,
-    },
-    {
-      id: 'WISH-002',
-      name: 'Sunset Glow Pack',
-      author: 'WarmTones',
-      addedOn: '2024-10-20',
-      gradient: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)',
-      tags: ['Bright', 'Gradient', 'Vibrant'],
-      price: 4.99,
-      isFavorite: false,
-    },
-    {
-      id: 'WISH-003',
-      name: 'Galaxy Mode',
-      author: 'SpaceArt',
-      addedOn: '2024-09-10',
-      gradient: 'linear-gradient(135deg, #654ea3 0%, #eaafc8 100%)',
-      tags: ['Dark', 'Futuristic', 'Stars'],
-      price: 7.49,
-      isFavorite: true,
-    },
-    {
-      id: 'WISH-004',
-      name: 'Nature Calm Kit',
-      author: 'Green Design',
-      addedOn: '2024-08-25',
-      gradient: 'linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)',
-      tags: ['Organic', 'Fresh', 'Greenery'],
-      price: 3.99,
-      isFavorite: false,
-    },
-  ];
+  // ✅ Remove item
+  const handleRemove = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/wishlist/${id}?userId=${userId}`);
+      setWishlistItems((prev) => prev.filter((item) => item._id !== id));
+    } catch (error) {
+      console.error("Error removing item:", error);
+    }
+  };
 
-  const filteredItems = wishlistItems.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.author.toLowerCase().includes(searchQuery.toLowerCase())
+  // ✅ Move to cart
+  const handleMoveToCart = async (item) => {
+    const token = localStorage.getItem('token');
+    
+    // Debug logging
+    console.log('=== MOVE TO CART DEBUG ===');
+    console.log('Full item object:', JSON.stringify(item, null, 2));
+    console.log('item.themeId:', item.themeId);
+    console.log('item._id:', item._id);
+    console.log('User ID:', userId);
+    console.log('Token exists:', !!token);
+    
+    if (!token || !userId || userId === 'guest') {
+      alert('⚠️ Please login first.');
+      return;
+    }
+
+    // Validate item has themeId
+    if (!item.themeId) {
+      console.error('❌ Missing themeId in item:', item);
+      alert('⚠️ This item is missing theme information. Please save it again from the shop.');
+      return;
+    }
+
+    try {
+      const payload = {
+        userId: userId,
+        themeId: item.themeId.toString(),
+        name: item.name,
+        description: item.description || 'A beautiful theme',
+        price: item.price || 0,
+        category: item.category || 'general',
+        preview: item.preview || ['💎'],
+        author: item.author || 'Unknown',
+        gradient: item.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      };
+
+      console.log('Sending payload:', payload);
+
+      // Add to cart
+      const res = await fetch('http://localhost:5000/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      console.log('Response:', data);
+
+      if (data.success) {
+        // Remove from wishlist
+        await handleRemove(item._id);
+        alert('✅ Moved to cart!');
+        window.dispatchEvent(new Event('cartUpdated'));
+      } else {
+        alert(`⚠️ ${data.message}`);
+        console.error('Server error:', data);
+      }
+    } catch (err) {
+      console.error('Error moving to cart:', err);
+      alert('❌ Failed to move to cart.');
+    }
+  };
+
+  // ✅ Search filter
+  const filteredItems = wishlistItems.filter(
+    (item) =>
+      item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.author?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-        padding: '20px',
-        boxSizing: 'border-box',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        overflowY: 'auto',
-      }}
-    >
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '30px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
-            <button
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '12px 20px',
-                color: 'white',
-                fontSize: '16px',
-                cursor: 'pointer',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.3s ease',
-              }}
-              onClick={() => window.history.back()}
-            >
-              ← Back to Shop
+    <div className="wishlist-page">
+      <div className="wishlist-container">
+        <div className="wishlist-header">
+          <div className="wishlist-title-row">
+            <button className="back-btn" onClick={() => window.history.back()}>
+              ← Back
             </button>
-            <h1
-              style={{
-                color: 'white',
-                fontSize: '32px',
-                margin: 0,
-                fontWeight: '700',
-              }}
-            >
-              💖 Wishlist
+            <h1 className="wishlist-title">
+              <span className="title-icon">💖</span>
+              My Wishlist
             </h1>
           </div>
 
-          {/* Search Bar */}
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <input
-              type="text"
-              placeholder="🔍 Search themes or creators..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                flex: 1,
-                padding: '14px 20px',
-                borderRadius: '12px',
-                border: 'none',
-                fontSize: '15px',
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                outline: 'none',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-              }}
-            />
+          <input
+            type="text"
+            placeholder="🔍 Search saved themes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="wishlist-search"
+          />
+
+          <div className="wishlist-stats">
+            <span className="stat-item">
+              <span className="stat-number">{filteredItems.length}</span>
+              <span className="stat-label">Saved Themes</span>
+            </span>
           </div>
         </div>
 
-        {/* Wishlist Items */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', paddingBottom: '40px' }}>
+        <div className="wishlist-list">
           {filteredItems.length === 0 ? (
-            <div
-              style={{
-                background: 'white',
-                borderRadius: '20px',
-                padding: '60px',
-                textAlign: 'center',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-              }}
-            >
-              <div style={{ fontSize: '80px', marginBottom: '20px' }}>🕊️</div>
-              <h2 style={{ fontSize: '24px', color: '#333', marginBottom: '10px' }}>No items found</h2>
-              <p style={{ color: '#666' }}>Try searching for another theme or author</p>
+            <div className="wishlist-empty">
+              <div className="wishlist-empty-icon">💔</div>
+              <h2>Your wishlist is empty</h2>
+              <p>Save your favorite themes to view them here!</p>
+              <button className="browse-btn" onClick={() => window.history.back()}>
+                Browse Themes
+              </button>
             </div>
           ) : (
             filteredItems.map((item) => (
-              <div
-                key={item.id}
-                style={{
-                  background: 'white',
-                  borderRadius: '20px',
-                  padding: '25px',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-                }}
-              >
-                {/* Card Header */}
+              <div key={item._id} className="wishlist-card">
                 <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderBottom: '2px solid #f0f0f0',
-                    paddingBottom: '15px',
-                    marginBottom: '15px',
-                  }}
+                  className="wishlist-preview"
+                  style={{ background: item.gradient }}
                 >
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: '18px',
-                        color: '#333',
-                        fontWeight: '600',
-                      }}
-                    >
-                      {item.name}
-                    </h3>
-                    <p
-                      style={{
-                        margin: '4px 0 0 0',
-                        color: '#666',
-                        fontSize: '14px',
-                      }}
-                    >
-                      by {item.author}
-                    </p>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '14px',
-                      color: '#777',
-                    }}
-                  >
-                    Added: {new Date(item.addedOn).toLocaleDateString('en-US')}
+                  <div className="preview-overlay">
+                    <span className="preview-emoji">💎</span>
                   </div>
                 </div>
 
-                {/* Card Body */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div
-                    style={{
-                      width: '100px',
-                      height: '100px',
-                      borderRadius: '14px',
-                      background: item.gradient,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontSize: '24px',
-                      fontWeight: 'bold',
-                      flexShrink: 0,
-                    }}
-                  >
-                    🎨
+                <div className="wishlist-info">
+                  <div className="wishlist-card-header">
+                    <div>
+                      <h3>{item.name}</h3>
+                      <p className="wishlist-author">by {item.author}</p>
+                    </div>
+                    <span className="wishlist-price">
+                      {item.price === 0 ? 'Free' : `$${item.price.toFixed(2)}`}
+                    </span>
                   </div>
 
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '8px',
-                        marginBottom: '10px',
-                      }}
-                    >
-                      {item.tags.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          style={{
-                            padding: '6px 12px',
-                            background: '#f3f4f6',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            color: '#555',
-                            fontWeight: '500',
-                          }}
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: '#667eea',
-                      }}
-                    >
-                      ${item.price.toFixed(2)}
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div className="wishlist-actions">
+                  
                     <button
-                      style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '10px',
-                        padding: '10px 16px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s ease',
-                      }}
-                      onMouseOver={(e) => (e.target.style.transform = 'translateY(-2px)')}
-                      onMouseOut={(e) => (e.target.style.transform = 'translateY(0)')}
+                      className="remove-btn"
+                      onClick={() => handleRemove(item._id)}
                     >
-                      🛒 Move to Cart
-                    </button>
-
-                    <button
-                      style={{
-                        background: item.isFavorite ? '#fde68a' : '#f0f0f0',
-                        color: '#333',
-                        border: 'none',
-                        borderRadius: '10px',
-                        padding: '10px 16px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s ease',
-                      }}
-                      onMouseOver={(e) => (e.target.style.background = '#e5e5e5')}
-                      onMouseOut={(e) =>
-                        (e.target.style.background = item.isFavorite ? '#fde68a' : '#f0f0f0')
-                      }
-                    >
-                      ❤️ {item.isFavorite ? 'Favorited' : 'Add to Favorites'}
+                      🗑️ Remove
                     </button>
                   </div>
                 </div>
@@ -301,4 +191,4 @@ function WishlistPage() {
   );
 }
 
-export default WishlistPage;
+export default Wishlist;
